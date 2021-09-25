@@ -1,0 +1,2 @@
+global.clientList = [];
+global.tcpSocket = {};
