@@ -5,6 +5,8 @@ const path = require('path');
 const cors = require("cors");
 const filesRouter = require("./app/file_upload.routes");
 const qrscanController = require("./app/qrscanController");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 // const options = {
 //     key: fs.readFileSync("/etc/letsencrypt/live/covidtest4u.de/privkey.pem"),
@@ -51,6 +53,12 @@ db.sequelize.sync().then(res => {
 app.get("/", (req, res) => {
     res.json({msg: ["Welcome to Covid Test App!"]});
 });
+
+app.get("/test", async (req, res) => {
+    const hash = crypto.createHash('sha256').update('asdfasdfasdf').digest('hex');
+    res.json({msg: hash});
+});
+
 
 // routes
 require('./app/routes/auth.routes')(app);

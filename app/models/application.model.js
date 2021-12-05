@@ -39,6 +39,15 @@ module.exports = (sequelize, Sequelize) => {
         bookingTime: {
             type: Sequelize.STRING(16),
         },
+        agreeCWA: {
+            type: Sequelize.INTEGER(4),
+        },
+        agreePersonalData: {
+            type: Sequelize.INTEGER(4),
+        },
+        cwaID: {
+            type: Sequelize.STRING(256),
+        },
         testCenterId: {
             type: Sequelize.INTEGER(11)
         },

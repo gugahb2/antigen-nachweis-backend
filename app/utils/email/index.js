@@ -26,10 +26,6 @@ const transporter = nodeMailer.createTransport(mailConfig);
 // const transporter = nodeMailer.createTransport(testMailConfig);
 
 exports.sendMail = (application, fileName, subject, content) => {
-    console.log(application.id);
-    console.log(application.email);
-    console.log(fileName);
-
     const to = application.email;
     const user_name = application.firstName + ' ' + application.lastName;
 
@@ -57,9 +53,6 @@ exports.sendMail = (application, fileName, subject, content) => {
 
 
 exports.sendMailAppointmentConfirm = (application, subject, content) => {
-    console.log(application.id);
-    console.log(application.email);
-
     const to = application.email;
     const user_name = application.firstName + ' ' + application.lastName;
 

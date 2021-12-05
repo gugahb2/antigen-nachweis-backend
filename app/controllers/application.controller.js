@@ -12,6 +12,8 @@ const makeMailFromTemplate = require("../utils/email/mailTemplate");
 const formSubmitMailTemplate = require("../utils/email/formSubmiMailTemplate");
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const {v4: uuidv4} = require('uuid');
+const crypto = require("crypto");
 
 /**
  * Register Application
@@ -36,13 +38,46 @@ exports.registerApplication = async (req, res) => {
             bookingTime: req.body.bookingTime,
             zipcode: req.body.zipCode,
             street: req.body.street,
+            agreeCWA: req.body.agreeCWA,
+            agreePersonalData: req.body.agreePersonalData,
             // timeSlotId: req.body.timeSlotId,
             active: 1
         }
 
-        const application = await Application.create(data);
+        // Generating CWA TestID
+        const personalData = {
+            fn: data.firstName,
+            ln: data.lastName,
+            dob: data.birthDay,
+            testid: uuidv4(),
+            timestamp: Math.floor(new Date(data.bookingDate).getTime() / 1000),
+            salt: crypto.randomBytes(16)
+        };
+        const strForHash = `${personalData.dob}#${personalData.fn}#${personalData.ln}#${personalData.timestamp}#${personalData.testid}#${personalData.salt}`;
+        const cwaID = crypto.createHash('sha256').update(strForHash).digest('hex');
 
-        res.status(200).json({result: application.id});
+        const application = await Application.create({...data, cwaID});
+
+        // Generating CWA link
+        const qrcodeInfo = data.agreePersonalData ?
+            {
+                ...personalData,
+                hash: cwaID
+            } :
+            {
+                testid: personalData.testid,
+                timestamp: personalData.timestamp,
+                salt: personalData.salt,
+                hash: cwaID
+            }
+        const base64Str = Buffer.from(JSON.stringify(qrcodeInfo)).toString('base64');
+        const cwaLink = `https://s.coronawarn.app?v=1#${base64Str}`;
+
+        if (data.agreePersonalData) {
+            res.status(200).json({result: application.id, cwaLink});
+        } else {
+            res.status(200).json({result: application.id});
+        }
 
         // sending mail
         const testCenter = await TestCenter.findOne({
