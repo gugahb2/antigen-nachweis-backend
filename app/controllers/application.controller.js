@@ -250,7 +250,7 @@ exports.updateApplication = async (req, res) => {
 
 exports.completeApplication = async (req, res) => {
     const applicationId = req.body.applicationId || 0;
-    const adminName = req.body.adminName || 'Mohmd Alkhalawi';
+    const adminName = req.body.adminName || 'Amir Temirov';
     const adminId = req.body.adminId || 0;
 
     try {
@@ -287,7 +287,7 @@ exports.completeApplication = async (req, res) => {
         const delta = 70;
         doc
             .fontSize(10)
-            .text('Abraz Dream GmbH, Boxberger Str. 3, D-12681 Berlin', 60, 60 + delta0)
+            .text('Russische Sauna Banja "Berezka", Stromstraße 50, 10551 Berlin', 60, 60 + delta0)
             .text(`${germanDateFormat(application.updatedDate)}`, 60, 60 + delta0, {align: "right"})
             .text(`Bescheinigung über das Vorliegen eines positiven oder negativen Antigentests zum Nachweis des SARS-CoV-2 Virus`, 60, 90 + delta0)
             .text(`Name / Name : `, 60, 120 + delta0).text(`${application.firstName} ${application.lastName}`, 200, 120 + delta0)

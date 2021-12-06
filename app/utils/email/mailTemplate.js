@@ -104,7 +104,7 @@ module.exports = (application, adminName) => {
 <body style="font-family: Poppins, sans-serif; background-color: #e8e5ea;">
 <div class="mail-container">
     <div class='mail-header'>
-        <p>Abraz Dream GmbH, Boxberger Str. 3, D-12681 Berlin</p>
+        <p>Russische Sauna Banja "Berezka", Stromstraße 50, 10551 Berlin</p>
         <p>${germanDateFormat(application.updatedDate)}</p>
     </div>
     <div class='paragraph'>
@@ -175,7 +175,7 @@ module.exports = (application, adminName) => {
         <div class='paragraph'>
             <p class='font-bold'>${application.testCenter && application.testCenter.name}</p>
             <p>${application.testCenter && application.testCenter.address}</p>
-            <p>${adminName || 'Mohmd Alkhalawi'}</p>
+            <p>${adminName || 'Amir Temirov'}</p>
         </div>
     </div>
     <div>

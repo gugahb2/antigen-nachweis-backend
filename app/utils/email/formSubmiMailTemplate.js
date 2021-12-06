@@ -99,7 +99,7 @@ module.exports = (info) => {
         </div>
         <div class="paragraph">
             <p>Mit freundlichen Grüßen</p>
-            <p>Ihr Abraz Dream Team</p>
+            <p>Ihr Coronatestbanja Team</p>
         </div>
     </div>
 </div>
