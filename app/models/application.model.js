@@ -39,11 +39,13 @@ module.exports = (sequelize, Sequelize) => {
         bookingTime: {
             type: Sequelize.STRING(16),
         },
-        agreeCWA: {
+        disagreePersonalData: {
             type: Sequelize.INTEGER(4),
+            defaultValue: 0,
         },
         agreePersonalData: {
             type: Sequelize.INTEGER(4),
+            defaultValue: 0,
         },
         cwaID: {
             type: Sequelize.STRING(256),

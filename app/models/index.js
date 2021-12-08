@@ -31,6 +31,7 @@ db.testCenter = require("./testCenter.model")(sequelize, Sequelize);
 db.dateSlot = require("./dateSlot.model")(sequelize, Sequelize);
 db.timeSlot = require("./timeSlot.model")(sequelize, Sequelize);
 db.confirmation = require("./confirmation.model")(sequelize, Sequelize);
+db.track = require("./track.model")(sequelize, Sequelize);
 
 db.testCenter.hasMany(db.admin);
 db.admin.belongsTo(db.testCenter);

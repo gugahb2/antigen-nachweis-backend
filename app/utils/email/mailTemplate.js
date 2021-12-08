@@ -5,7 +5,7 @@
  */
 
 const {germanTimeFormat, germanDateFormat} = require('../../utils');
-module.exports = (application, adminName) => {
+module.exports = (application, adminName, testType, manufacturer, testName) => {
 
     const result = application.status === 2 ? 'Positiv / Positive' : 'Negativ / Negative';
     const resultClass = application.status === 2 ? 'positive-box' : 'negative-box';
@@ -138,15 +138,15 @@ module.exports = (application, adminName) => {
     </div>
     <div class='form-line'>
         <p>Test-/Probentyp / Test Type:</p>
-        <p>SARS-CoV-2 Ag Test | oro-/nasopharyngeal(er) Abstrich / swab </p>
+        <p>${testType} </p>
     </div>
     <div class='form-line'>
         <p>Hersteller / Producer: </p>
-        <p>Nal von Minden</p>
+        <p>${manufacturer}</p>
     </div>
     <div class='form-line'>
         <p>Testname / Test name: </p>
-        <p>NADAL COVID-19 AG Test</p>
+        <p>${testName}</p>
     </div>
     <div class='form-line'>
         <p>Bestellnummer / Order No: </p>

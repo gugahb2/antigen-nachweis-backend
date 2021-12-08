@@ -5,6 +5,7 @@ const TestCenter = db.testCenter;
 const DateSlot = db.dateSlot;
 const TimeSlot = db.timeSlot;
 const Application = db.application;
+const Track = db.track;
 const {DEFAULT_LIMIT} = require("../config");
 const {sendMail, sendMailAppointmentConfirm} = require("../utils/email");
 const {germanTimeFormat, germanDateFormat} = require("../utils");
@@ -24,6 +25,8 @@ const crypto = require("crypto");
  */
 exports.registerApplication = async (req, res) => {
     try {
+        console.log('dis:', req.body.disagreePersonalData)
+        console.log('agree:', req.body.agreePersonalData)
         const data = {
             firstName: req.body.firstName,
             lastName: req.body.lastName,
@@ -38,7 +41,7 @@ exports.registerApplication = async (req, res) => {
             bookingTime: req.body.bookingTime,
             zipcode: req.body.zipCode,
             street: req.body.street,
-            agreeCWA: req.body.agreeCWA,
+            disagreePersonalData: req.body.disagreePersonalData,
             agreePersonalData: req.body.agreePersonalData,
             // timeSlotId: req.body.timeSlotId,
             active: 1
@@ -73,7 +76,7 @@ exports.registerApplication = async (req, res) => {
         const base64Str = Buffer.from(JSON.stringify(qrcodeInfo)).toString('base64');
         const cwaLink = `https://s.coronawarn.app?v=1#${base64Str}`;
 
-        if (data.agreePersonalData) {
+        if (data.agreePersonalData || data.disagreePersonalData) {
             res.status(200).json({result: application.id, cwaLink});
         } else {
             res.status(200).json({result: application.id});
@@ -176,6 +179,48 @@ exports.getApplicationHistory = async (req, res) => {
     }
 }
 
+exports.getChangeHistoryByFilter = async (req, res) => {
+    const selectedDate = new Date(req.body.searchDate).getTime();
+    const curDate = selectedDate - (selectedDate % (24 * 3600000));
+    try {
+        const tracks = await Track.findAndCountAll({
+            where: {
+                changeDate: {
+                    [Op.and]: [
+                        {[Op.gte]: curDate},
+                        {[Op.lt]: curDate + 24 * 3600000}
+                    ]
+                },
+            }
+        })
+        return res.status(200).json({result: tracks});
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({error: err.toString(), msg: "SERVER_ERROR"});
+    }
+}
+
+exports.getConsentHistoryByFilter = async (req, res) => {
+    const selectedDate = new Date(req.body.searchDate).getTime();
+    const curDate = selectedDate - (selectedDate % (24 * 3600000));
+    try {
+        const tracks = await Application.findAndCountAll({
+            where: {
+                createdDate: {
+                    [Op.and]: [
+                        {[Op.gte]: curDate},
+                        {[Op.lt]: curDate + 24 * 3600000}
+                    ]
+                },
+            }
+        })
+        return res.status(200).json({result: tracks});
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({error: err.toString(), msg: "SERVER_ERROR"});
+    }
+}
+
 exports.getApplicationById = (req, res) => {
     Application.findOne({
         where: {
@@ -193,24 +238,45 @@ exports.getApplicationById = (req, res) => {
 }
 
 exports.updateApplication = async (req, res) => {
-    console.log(req.body)
     const applicationId = req.body.applicationId || 0;
     try {
         const application = await Application.findOne({
             where: {id: applicationId}
         });
+        const changeData = [];
 
         for (const key of Object.keys(req.body)) {
-            if (key !== 'applicationId') {
-                application[key] = req.body[key];
+            if (key !== 'applicationId' && key !== 'adminID' && key !== 'birthDay') {
+                if (application[key] !== req.body[key]) {
+                    changeData.push(`${key}: ${application[key] || 'null'} -> ${req.body[key]}`);
+                    application[key] = req.body[key];
+                }
             }
         }
 
+        // console.log('old: ', application.birthDay)
+        // console.log('new: ', req.body.birthDay)
+        // if (application.birthDay !== new Date(req.body.birthDay)) {
+        //     application.birthDay = new Date(req.body.birthDay);
+        //     changeData.push(`birthDay: ${application.birthDay} -> ${new Date(req.body.birthDay)}`);
+        // }
         application.updatedDate = new Date();
         if (req.body.status && req.body.status === 1) {
             application.checkinDate = new Date();
         }
         await application.save();
+
+        // Register Track
+        const trackData = {
+            applicationId: applicationId,
+            customerName: req.body.firstName + ' ' + req.body.lastName,
+            changeDate: new Date(),
+            changeType: 'update',
+            changeContent: changeData.join('&'),
+            adminID: req.body.adminID
+        }
+
+        await Track.create(trackData);
 
         return res.status(200).json({result: application});
     } catch (err) {
@@ -218,40 +284,14 @@ exports.updateApplication = async (req, res) => {
     }
 }
 
-// exports.completeApplication = async (req, res) => {
-//     const applicationId = req.body.applicationId || 0;
-//     const adminName = req.body.adminName;
-//
-//     try {
-//         const application = await Application.findOne({
-//             where: {id: applicationId},
-//             include: [{
-//                 model: TestCenter
-//             }]
-//         });
-//
-//         application.completed = 1;
-//         application.updatedDate = new Date();
-//         await application.save();
-//
-//         //sending mail
-//         sendMail(
-//             res,
-//             application,
-//             'Ergebnis Ihres Schnelltests / Your test result',
-//             makeMailFromTemplate(application, adminName)
-//         );
-//
-//     } catch (err) {
-//         console.log(err)
-//         return res.status(500).json({error: err.toString(), msg: "SERVER_ERROR"});
-//     }
-// }
-
 exports.completeApplication = async (req, res) => {
+
     const applicationId = req.body.applicationId || 0;
     const adminName = req.body.adminName || 'Amir Temirov';
     const adminId = req.body.adminId || 0;
+    const testType = req.body.testType || '';
+    const manufacturer = req.body.manufacturer || '';
+    const testName = req.body.testName || '';
 
     try {
         const application = await Application.findOne({
@@ -296,9 +336,9 @@ exports.completeApplication = async (req, res) => {
             .text(`Ausweisnummer / ID Number: `, 60, 180 + delta0).text(`${application.IDNumber}`, 200, 180 + delta0)
             .text(`Anschrift / Address: `, 60, 200 + delta0).text(`${application.address}, ${application.zipcode} ${application.street}`, 200, 200 + delta0)
             .text(`Testort / Test Location: `, 60, 180 + delta).text(`${application.testCenter && application.testCenter.name} ${application.testCenter && application.testCenter.address}`, 200, 180 + delta)
-            .text(`Test-/Probentyp / Test Type: `, 60, 200 + delta).text(`SARS-CoV-2 Ag Test | oro-/nasopharyngeal(er) Abstrich / swab `, 200, 200 + delta)
-            .text(`Hersteller / Producer: `, 60, 220 + delta).text(`Nal von Minden `, 200, 220 + delta)
-            .text(`Testname / Test name: `, 60, 240 + delta).text(`NADAL COVID-19 AG Test `, 200, 240 + delta)
+            .text(`Test-/Probentyp / Test Type: `, 60, 200 + delta).text(`${testType} `, 200, 200 + delta)
+            .text(`Hersteller / Producer: `, 60, 220 + delta).text(`${manufacturer} `, 200, 220 + delta)
+            .text(`Testname / Test name: `, 60, 240 + delta).text(`${testName} `, 200, 240 + delta)
             .text(`Bestellnummer / Order No: `, 60, 260 + delta).text(`${application.id}`, 200, 260 + delta)
             .text(`Testzeitpunkt / Test time: `, 60, 280 + delta).text(`${application.checkinDate ? germanTimeFormat(application.checkinDate) : ''}`, 200, 280 + delta)
             .text(`Testergebnis / Test Result: `, 60, 320 + delta)
@@ -330,7 +370,7 @@ exports.completeApplication = async (req, res) => {
             application,
             fileName,
             `Ergebnis/Test result - ${application.firstName} ${application.lastName}, Test ID ${application.id}`,
-            makeMailFromTemplate(application, adminName)
+            makeMailFromTemplate(application, adminName, testType, manufacturer, testName)
         );
 
     } catch (err) {
@@ -349,7 +389,7 @@ exports.finishApplicantTest = async (req, res) => {
             application.updatedDate = new Date();
             await application.save();
         }
-        return res.status(200).json({result: 'UPDATE_SUCCESS'})
+        return res.status(200).json({result: 'UPDATE_SUCCESS'});
     } catch (err) {
         return res.status(500).json({error: err.toString(), msg: "SERVER_ERROR"});
     }

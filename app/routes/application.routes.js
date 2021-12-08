@@ -27,6 +27,18 @@ module.exports = function (app) {
     );
 
     app.all(
+        "/change-history/get-by-filter",
+        [authJwt.verifyToken],
+        controller.getChangeHistoryByFilter
+    );
+
+    app.all(
+        "/consent-history/get-by-filter",
+        [authJwt.verifyToken],
+        controller.getConsentHistoryByFilter
+    );
+
+    app.all(
         "/application/get-by-id",
         controller.getApplicationById
     );
