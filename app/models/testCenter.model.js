@@ -15,6 +15,15 @@ module.exports = (sequelize, Sequelize) => {
         stamp: {
             type: Sequelize.STRING(255)
         },
+        testType: {
+            type: Sequelize.STRING(255)
+        },
+        manufacturer: {
+            type: Sequelize.STRING(255)
+        },
+        testName: {
+            type: Sequelize.STRING(255)
+        },
         active: {
             type: Sequelize.INTEGER(4),
             defaultValue: 1,

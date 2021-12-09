@@ -30,7 +30,7 @@ exports.sendMail = (application, fileName, subject, content) => {
     const user_name = application.firstName + ' ' + application.lastName;
 
     transporter.sendMail({
-        from: 'Antigen-Nachweis <antigen.nachweis@gmail.com>',
+        from: 'Coronatest Banja <coronatestbanja@gmail.com>',
         to: `${user_name} <${to}>`,
         subject: subject,
         text: `Dear ${user_name}!`,
