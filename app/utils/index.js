@@ -7,7 +7,7 @@ exports.timeFormat = (timeStr) => {
 
 exports.germanTimeFormat = (timeStr) => {
     if (!timeStr) return null;
-    const date = new Date(new Date(timeStr).getTime() + 7200000);
+    const date = new Date(new Date(timeStr).getTime() + 3600000);
 
     const y = date.getFullYear();
     const m = date.getMonth() + 1;
